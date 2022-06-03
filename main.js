@@ -8,7 +8,7 @@ const client = new MongoClient(uri);
 const SCHOOL_ID = new ObjectId('5f2987e020834114b8efd6f8');
 const USER_ID = new ObjectId('0000d231816abba584714c9e');
 const BUCKET = 'bucket-5f2987e020834114b8efd6f8';
-const NUM_HOMEWORKS = 1000;
+const NUM_HOMEWORKS = 100000;
 const MAX_FILES_PER_TASK = 5;
 
 function buildFile(creatorId, bucket) {
@@ -89,8 +89,6 @@ async function insertTaskWithFiles(db, schoolId, userId, bucket) {
 
   const task = buildTask(schoolId, userId, fileIds);
   await db.collection('homeworks').insertOne(task);
-
-  console.log('files: ', files.length);
 }
 
 async function run() {
