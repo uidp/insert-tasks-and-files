@@ -7,11 +7,12 @@ const client = new MongoClient(uri);
 
 const SCHOOL_ID = new ObjectId('5f2987e020834114b8efd6f8');
 const USER_ID = new ObjectId('0000d231816abba584714c9e');
+const STORAGE_PROVIDER_ID = new ObjectId('62949a4003839b6162aa566b');
 const BUCKET = 'bucket-5f2987e020834114b8efd6f8';
-const NUM_HOMEWORKS = 100000;
-const MAX_FILES_PER_TASK = 5;
+const NUM_HOMEWORKS = 500000;
+const MAX_FILES_PER_TASK = 4;
 
-function buildFile(creatorId, bucket) {
+function buildFile(creatorId, storageProviderId, bucket) {
   const file = { 
     securityCheck : {
         status : 'pending', 
@@ -25,7 +26,8 @@ function buildFile(creatorId, bucket) {
     name : 'test.txt',
     type : 'text/plain', 
     size : 1, 
-    storageFileName : `${Date.now()}-test.txt`, 
+    storageFileName : `${Date.now()}-test.txt`,
+    storageProviderId: storageProviderId,
     thumbnail : `https://schulcloud.org/images/login-right.png`, 
     owner : creatorId, 
     refOwnerModel : 'user', 
@@ -72,19 +74,19 @@ function buildTask(schoolId, teacherId, fileIds) {
   return task;
 }
 
-async function insertTaskWithFiles(db, schoolId, userId, bucket) {
+async function insertTaskWithFiles(db, schoolId, userId, storageProviderId, bucket) {
   const numFiles = Math.floor(Math.random() * (MAX_FILES_PER_TASK + 1));
 
   const files = [];
 
   for(let i = 0; i < numFiles; i+=1) {
-    files.push(buildFile(userId, bucket));
+    files.push(buildFile(userId, storageProviderId, bucket));
   }
 
   let fileIds = [];
   if (files.length > 0) {
     const resultFiles = await db.collection('files').insertMany(files);
-    fileIds = resultFiles.insertedIds;
+    fileIds = Object.values(resultFiles.insertedIds);
   }
 
   const task = buildTask(schoolId, userId, fileIds);
@@ -97,7 +99,7 @@ async function run() {
     const db = client.db('schulcloud');
 
     for (let i = 0; i < NUM_HOMEWORKS; i+=1) {
-      await insertTaskWithFiles(db, SCHOOL_ID, USER_ID, BUCKET);
+      await insertTaskWithFiles(db, SCHOOL_ID, USER_ID, STORAGE_PROVIDER_ID, BUCKET);
     }
 
   } finally {
